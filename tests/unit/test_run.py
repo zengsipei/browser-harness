@@ -2,6 +2,8 @@ import sys
 from io import StringIO
 from unittest.mock import patch
 
+import pytest
+
 from browser_harness import run
 
 
@@ -217,4 +219,22 @@ def test_local_chrome_listening_rejects_non_chrome():
     with patch("browser_harness.run.urllib.request.urlopen") as mock_open:
         assert run._local_chrome_listening() is True
         mock_open.assert_called_once()
+
+
+def test_cli_doctor_fix_snap_invokes_guide():
+    with patch.object(sys, "argv", ["browser-harness", "doctor", "--fix-snap"]), \
+         patch("browser_harness.run.run_doctor_fix_snap", return_value=0) as m:
+        with pytest.raises(SystemExit) as ei:
+            run.main()
+    assert ei.value.code == 0
+    m.assert_called_once()
+
+
+def test_cli_doctor_rejects_unknown_flags():
+    err = StringIO()
+    with patch.object(sys, "argv", ["browser-harness", "doctor", "--bogus"]), patch("sys.stderr", err):
+        with pytest.raises(SystemExit) as ei:
+            run.main()
+    assert ei.value.code == 2
+    assert "usage" in err.getvalue().lower()
 

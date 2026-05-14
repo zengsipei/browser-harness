@@ -17,6 +17,7 @@ from .admin import (
     print_update_banner,
     restart_daemon,
     run_doctor,
+    run_doctor_fix_snap,
     run_update,
     start_remote_daemon,
     stop_remote_daemon,
@@ -39,6 +40,8 @@ Helpers are pre-imported. The daemon auto-starts and connects to the running bro
 Commands:
   browser-harness --version        print the installed version
   browser-harness --doctor         diagnose install, daemon, and browser state
+  browser-harness doctor           same as --doctor
+  browser-harness doctor --fix-snap   print how to fix Snap Chromium blocking CDP (Linux)
   browser-harness --update [-y]    pull the latest version (agents: pass -y)
   browser-harness --reload         stop the daemon so next call picks up code changes
 """
@@ -80,6 +83,14 @@ def main():
         print(_version() or "unknown")
         return
     if args and args[0] == "--doctor":
+        sys.exit(run_doctor())
+    if args and args[0] == "doctor":
+        rest = args[1:]
+        if rest == ["--fix-snap"]:
+            sys.exit(run_doctor_fix_snap())
+        if rest:
+            print("usage: browser-harness doctor [--fix-snap]", file=sys.stderr)
+            sys.exit(2)
         sys.exit(run_doctor())
     if args and args[0] == "--update":
         yes = any(a in {"-y", "--yes"} for a in args[1:])
